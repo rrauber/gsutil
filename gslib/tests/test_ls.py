@@ -166,6 +166,21 @@ class TestLs(testcase.GsUtilIntegrationTestCase):
     bucket_uri = self.CreateBucket()
     self.AssertNObjectsInBucket(bucket_uri, 0)
 
+  # @SkipForGS('Only s3 V4 signatures error on location mismatches.')
+  def test_bucket_location(self):
+    with SetBotoConfigForTest([('s3', 'host', 's3.us-east-2.amazonaws.com'),
+                               ('Credentials', 's3_host', 's3.us-east-2.amazonaws.com')]):
+      bucket_uri = self.CreateBucket(provider='s3', location='us-east-2', test_objects=1)
+    bucket_uri.location = None
+    bucket_uri.connection = None
+    bucket_uri.connection_args = None
+    bucket_uri.provider_pool = {}
+
+    with SetBotoConfigForTest([('s3', 'host', 's3.eu-west-1.amazonaws.com'),
+                               ('Credentials', 's3_host', 's3.eu-west-1.amazonaws.com')]):
+      stdout = self.RunGsUtil(['ls', suri(bucket_uri)], return_stdout=True)
+      self.assertEqual('', stdout)
+
   def test_empty_bucket_with_b(self):
     bucket_uri = self.CreateBucket()
     # Use @Retry as hedge against bucket listing eventual consistency.
