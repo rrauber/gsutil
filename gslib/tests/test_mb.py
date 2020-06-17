@@ -21,8 +21,10 @@ from __future__ import unicode_literals
 
 import boto
 import gslib.tests.testcase as testcase
+from gslib.tests.testcase.integration_testcase import SkipForGS
 from gslib.tests.testcase.integration_testcase import SkipForS3
 from gslib.tests.util import ObjectToURI as suri
+from gslib.tests.util import SetBotoConfigForTest
 from gslib.utils.retention_util import SECONDS_IN_DAY
 from gslib.utils.retention_util import SECONDS_IN_MONTH
 from gslib.utils.retention_util import SECONDS_IN_YEAR
@@ -47,6 +49,33 @@ class TestMb(testcase.GsUtilIntegrationTestCase):
                             expected_status=1,
                             return_stderr=True)
     self.assertIn('Invalid non-ASCII', stderr)
+
+  def location_redirect_test_helper(self, bucket_region, client_region):
+    bucket_host = 's3.%s.amazonaws.com' % bucket_region
+    client_host = 's3.%s.amazonaws.com' % client_region
+    name = self.MakeTempName('bucket')
+    suri = 's3://%s' % name
+    with SetBotoConfigForTest([('s3', 'host', client_host)]):
+      stdout = self.RunGsUtil(['mb', '-l', bucket_region, suri],
+                              expected_status=0,
+                              return_stderr=True)
+
+    # if we get here gsutil exited with status 0, meaning the bucket create
+    # succeeded and we need to clean up.
+    with SetBotoConfigForTest([('s3', 'host', bucket_host)]):
+      self.RunGsUtil(['rb', suri], expected_status=0, return_stderr=True)
+
+    self.assertIn('Creating s3://%s' % name, stdout)
+
+  @SkipForGS('Only s3 V4 signatures error on location mismatches.')
+  def test_invalid_location_constraint_redirect(self):
+    # ap-east-1 is used here since only regions launched after March 20, 2019
+    # return InvalidLocationConstraint errors.
+    self.location_redirect_test_helper('ap-east-1', 'us-east-2')
+
+  @SkipForGS('Only s3 V4 signatures error on location mismatches.')
+  def test_illegal_location_constraint_redirect(self):
+    self.location_redirect_test_helper('eu-west-1', 'us-east-2')
 
   @SkipForS3(BUCKET_LOCK_SKIP_MSG)
   def test_create_with_retention_seconds(self):
