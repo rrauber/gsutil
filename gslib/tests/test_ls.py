@@ -326,8 +326,8 @@ class TestLs(testcase.GsUtilIntegrationTestCase):
 
     @Retry(AssertionError, tries=3, timeout_secs=1)
     def _Check1(uri):
-        stdout = self.RunGsUtil(['ls', uri], return_stdout=True)
-        self.assertEqual('%s\n' % obj_uri, stdout)
+      stdout = self.RunGsUtil(['ls', uri], return_stdout=True)
+      self.assertEqual('%s\n' % obj_uri, stdout)
 
     with SetBotoConfigForTest([('s3', 'host', client_host)]):
       # sends a GET request

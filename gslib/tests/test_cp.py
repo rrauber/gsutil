@@ -1645,7 +1645,8 @@ class TestCp(testcase.GsUtilIntegrationTestCase):
 
     _CopyAndCheck()
 
-  def location_redirect_test_helper(self, src_bucket_region, dest_bucket_region, client_region):
+  def location_redirect_test_helper(self, src_bucket_region, dest_bucket_region,
+                                    client_region):
     src_bucket_host = 's3.%s.amazonaws.com' % src_bucket_region
     dest_bucket_host = 's3.%s.amazonaws.com' % dest_bucket_region
     client_host = 's3.%s.amazonaws.com' % client_region
@@ -1653,12 +1654,12 @@ class TestCp(testcase.GsUtilIntegrationTestCase):
     with SetBotoConfigForTest([('s3', 'host', src_bucket_host)]):
       src_bucket_uri = self.CreateBucket(location=src_bucket_region)
       self.CreateObject(bucket_uri=src_bucket_uri,
-                      object_name='obj0',
-                      contents=b'abc')
+                        object_name='obj0',
+                        contents=b'abc')
       self.CreateObject(bucket_uri=src_bucket_uri,
                         object_name='obj1',
                         contents=b'def')
-    
+
     with SetBotoConfigForTest([('s3', 'host', dest_bucket_host)]):
       dst_bucket_uri = self.CreateBucket(location=dest_bucket_region)
 
