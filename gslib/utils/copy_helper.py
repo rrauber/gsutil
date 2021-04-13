@@ -1398,10 +1398,12 @@ def _ShouldDoParallelCompositeUpload(logger,
       return bucket_metadata_pcu_check
 
     try:
-      bucket = gsutil_api.GetBucket(dst_url.bucket_name,
-                                    provider=dst_url.scheme,
-                                    fields=['id', 'encryption'])
-      if bucket.encryption and bucket.encryption.defaultKmsKeyName:
+      bucket = gsutil_api.GetBucket(
+          dst_url.bucket_name,
+          provider=dst_url.scheme,
+          fields=['id', 'encryption', 'retentionPolicy'])
+      if (bucket.encryption and
+          bucket.encryption.defaultKmsKeyName) or bucket.retentionPolicy:
         bucket_metadata_pcu_check = False
       else:
         bucket_metadata_pcu_check = True
